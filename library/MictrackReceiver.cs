@@ -124,6 +124,17 @@ namespace InvertedTomato.IO.Mictrack
 
         private void ReceiveStart(ConnectionState state)
         {
+            // Check buffer isn't alreay full
+            if(state.Position == state.Buffer.Length){
+                // Report error
+                OnError?.Invoke(this, new OnErrorEventArgs()
+                {
+                    Message = $"Message exceeds length limit of {state.Buffer.Length} bytes.",
+                    RemoteAddressString = state.RemoteAddressString
+                });
+                return; // Abort receive 
+            }
+
             // Begin receive
             // TODO: Handle case where we receive more data than buffer capacity
             try
