@@ -6,6 +6,6 @@ namespace InvertedTomato.IO.Mictrack.Models
     {
         public String RemoteAddressString { get; set; }
 
-        public MictrackBeacon Beacon { get; set; }
+        public Beacon Beacon { get; set; }
     }
 }

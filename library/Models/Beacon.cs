@@ -2,7 +2,7 @@ using System;
 
 namespace InvertedTomato.IO.Mictrack.Models
 {
-    public class MictrackBeacon
+    public class Beacon
     {
         public String IMEI { get; set; } // 15 digits
         public String GPRSUsername { get; set; }
