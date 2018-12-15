@@ -10,7 +10,8 @@ namespace InvertedTomato.IO.Mictrace
     {
         private readonly String[] Messages = new String[]{
             "#861108034747229#MT600#0000#AUTOLOW#1\r\n#00018b5fc03$GPRMC,093808.00,A,2741.6724,S,15309.1364,E,0.05,,121218,,,A*52\r\n##\r\n", // Actual GPS
-            "#863835023427631#MT600#0000#AUTO#1\r\n#a52d15e5803$GPRMC,094632.00,A,2237.7776,N,11402.1399,E,0.07,309.62,030116,,,A*49\r\n##\r\n" // Example from manual
+            "#863835023427631#MT600#0000#AUTO#1\r\n#a52d15e5803$GPRMC,094632.00,A,2237.7776,N,11402.1399,E,0.07,309.62,030116,,,A*49\r\n##\r\n", // Example from manual
+            "#963835023427632#MT600#0000#AUTO#1\r\n#a52d15e5803$GPRMC,134632.00,V,0,N,0,W,,,301220,,,\r\n##\r\n" // Contrived edge case
         };
 
         [Fact]
@@ -51,6 +52,26 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(BeaconRecord.LongitudeIndicators.East, record.LongitudeIndicator);
             Assert.Equal(0.07, record.GroundSpeed);
             Assert.Equal(309.62, record.Bearing);
+        }
+
+        [Fact]
+        public void EndToEnd_3()
+        {
+            var beacon = MessageParser.Parse(Messages[3]);
+            Assert.Equal("963835023427632", beacon.IMEI);
+            Assert.Equal("MT600", beacon.GPRSUsername);
+            Assert.Equal("0000", beacon.GPRSPassword);
+            Assert.Equal(Beacon.Statuses.PowerSaveStopped, beacon.Status);
+
+            var record = beacon.Records.Single();
+            Assert.Equal("12/12/2018 13:46:32", record.At.ToString());
+            Assert.Equal(BeaconRecord.Statuses.Invalid, record.Status);
+            Assert.Equal(0, record.Latitude);
+            Assert.Equal(BeaconRecord.LatitudeIndicators.North, record.LatitudeIndicator);
+            Assert.Equal(0, record.Longitude);
+            Assert.Equal(BeaconRecord.LongitudeIndicators.West, record.LongitudeIndicator);
+            Assert.Equal(0, record.GroundSpeed);
+            Assert.Null(record.Bearing);
         }
     }
 }

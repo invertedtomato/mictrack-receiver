@@ -130,9 +130,9 @@ namespace InvertedTomato.IO.Mictrack
                 var baseIdentifier = tokens[0];
 
                 // At
-                if (!DateTime.TryParseExact(tokens[9] + " " + tokens[1], "ddMMyy hhmmss.ff", CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var at))
+                if (!DateTime.TryParseExact(tokens[9] + " " + tokens[1], "ddMMyy HHmmss.ff", CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var at))
                 {
-                    throw new ProtocolViolationException($"Unable to parse At from '{tokens[11]} {tokens[3]}'.");
+                    throw new ProtocolViolationException($"Unable to parse At from '{tokens[9]} {tokens[1]}'.");
                 }
 
                 // Status
@@ -190,7 +190,8 @@ namespace InvertedTomato.IO.Mictrack
                 }
 
                 // GroundSpeed
-                if (!Double.TryParse(tokens[7], out var groundSpeed))
+                Double groundSpeed = 0;
+                if (tokens[7] != string.Empty && !Double.TryParse(tokens[7], out groundSpeed))
                 {
                     throw new ProtocolViolationException($"Unable to parse GroundSpeed from '{tokens[7]}'.");
                 }
