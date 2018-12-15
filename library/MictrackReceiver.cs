@@ -8,26 +8,47 @@ namespace InvertedTomato.IO.Mictrack
 {
     public class MictrackReceiver : IDisposable
     {
-        // Size of receive buffer - this must be at least as long as the longest possible message
+        /// <summary>
+        /// Raised when a beacon arrives from a GPS.
+        /// </summary>
+        public event OnBeaconEventHandler OnBeacon;
+
+        /// <summary>
+        /// Raised when an error occurs when communicating with a GPS. This generally not fatal as the GPS should try again shortly.
+        /// </summary>
+        public event OnErrorEventHandler OnError;
+
+        /// <summary>
+        /// If the receiver has been disposed and needs to be reinstantiated before use.
+        /// </summary>
+        public Boolean IsDisposed { get; private set; }
+
+        /// <summary>
+        /// If the receiver is currently running and available to recieve beacons.
+        /// </summary>
+        public Boolean IsRunning { get; private set; }
+
+        /// <summary>
+        /// The local endpoint used for listening. This is where you can set the listening port and/or IP address.
+        /// </summary>
+        public IPEndPoint LocalEndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 5000); // TODO: Is there an "official" default port?
+
+        /// <summary>
+        /// The number of pending connections that will be queued waiting to be processed.
+        /// <summary>
+        public Int32 ConnectionBacklogLimit { get; set; } = 10;
+
+        /// <summary>
+        /// Size of receive buffer - this must be at least as long as the longest possible message
+        /// </summary>
         private const Int32 RXBUFFER_LENGTH = 256; // Documtation example is 121 bytes
 
         public delegate void OnBeaconEventHandler(Object sender, OnBeaconEventArgs e);
 
         public delegate void OnErrorEventHandler(Object sender, OnErrorEventArgs e);
 
-        public event OnBeaconEventHandler OnBeacon;
-
-        public event OnErrorEventHandler OnError;
-
-        public Boolean IsDisposed { get; private set; }
-
-        public Boolean IsRunning { get; private set; }
-
-        public IPEndPoint LocalEndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 5000); // TODO: Is there an "official" default port?
-
-        public Int32 ConnectionBacklogLimit { get; set; } = 10;
-
         private readonly Socket Listener;
+
         private readonly Object Sync = new Object();
 
         public MictrackReceiver()
@@ -36,11 +57,18 @@ namespace InvertedTomato.IO.Mictrack
             Listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
+        /// <summary>
+        /// Start listening for beacons.
+        /// </summary>
         public void Start()
         {
             // Check that we are NOT already running in a thread-safe manner
             lock (Sync)
             {
+                if (IsDisposed)
+                {
+                    throw new ObjectDisposedException("Receiver has been disposed.");
+                }
                 if (IsRunning)
                 {
                     throw new InvalidOperationException("Receiver already running.");
@@ -381,17 +409,26 @@ namespace InvertedTomato.IO.Mictrack
         }
         protected virtual void Dispose(bool disposing)
         {
-            if (IsDisposed)
+            lock (Sync)
             {
-                return;
+                if (IsDisposed)
+                {
+                    return;
+                }
+                IsDisposed = true;
             }
+
             if (disposing)
             {
                 // Dispose managed state (managed objects)
                 Listener?.Dispose();
+                IsRunning = false;
             }
         }
 
+        /// <summary>
+        /// Stop listening for beacons if started, and then destroy all managed resourceas.
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
