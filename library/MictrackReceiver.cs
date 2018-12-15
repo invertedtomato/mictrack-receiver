@@ -184,7 +184,7 @@ namespace InvertedTomato.IO.Mictrack
             while (pos > 0)
             {
                 // Extract next message from buffer
-                var message = state.Buffer2.Substring(0, pos);
+                var message = state.Buffer2.Substring(0, pos + MESSAGE_SEPERATOR.Length);
 
                 // Trim buffer
                 state.Buffer2 = state.Buffer2.Substring(pos + MESSAGE_SEPERATOR.Length);
