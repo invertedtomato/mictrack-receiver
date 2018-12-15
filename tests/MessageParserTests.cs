@@ -21,7 +21,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal("861108034747229", beacon.IMEI);
             Assert.Equal("MT600", beacon.GPRSUsername);
             Assert.Equal("0000", beacon.GPRSPassword);
-            Assert.Equal(Beacon.Statuses.PowerSaveStopped, beacon.Status);
+            Assert.Equal(Beacon.Statuses.PowerSaveStationary, beacon.Status);
 
             var record = beacon.Records.Single();
             Assert.Equal("12/12/2018 09:38:08", record.At.ToString());
@@ -61,7 +61,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal("963835023427632", beacon.IMEI);
             Assert.Equal("MT600", beacon.GPRSUsername);
             Assert.Equal("0000", beacon.GPRSPassword);
-            Assert.Equal(Beacon.Statuses.PowerSaveStopped, beacon.Status);
+            Assert.Equal(Beacon.Statuses.PowerSaveStationary, beacon.Status);
 
             var record = beacon.Records.Single();
             Assert.Equal("12/12/2018 13:46:32", record.At.ToString());
