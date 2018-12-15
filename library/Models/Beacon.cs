@@ -39,7 +39,7 @@ namespace InvertedTomato.IO.Mictrack.Models
             /// <summary>
             /// Power saving mode and vehicle stopped.
             /// </summary>
-            PowerSaveStopped,
+            PowerSaveStationary,
             /// <summary>
             /// Power saving mode and vehicle moving.
             /// </summary>

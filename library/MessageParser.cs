@@ -72,7 +72,7 @@ namespace InvertedTomato.IO.Mictrack
                     beacon.Status = Beacon.Statuses.None;
                     break;
                 case "AUTOLOW":
-                    beacon.Status = Beacon.Statuses.PowerSaveStopped;
+                    beacon.Status = Beacon.Statuses.PowerSaveStationary;
                     break;
                 case "TOWED":
                     beacon.Status = Beacon.Statuses.PowerSaveMoving;

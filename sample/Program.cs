@@ -14,13 +14,11 @@ namespace InvertedTomato.IO.Mictrack
             receiver.OnBeacon += (sender, e) =>
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine($"{e.Beacon.IMEI} {e.Beacon.Status}");
+                Console.WriteLine($"IMEI {e.Beacon.IMEI} ({e.Beacon.Status})");
                 foreach(var record in e.Beacon.Records){
-                   Console.WriteLine($"  {record.BaseIdentifier} {record.At}"); 
-                   Console.WriteLine($"    Status:    {record.Status}"); 
-                   Console.WriteLine($"    Location:  {record.Latitude} {record.LatitudeIndicator}, {record.Longitude} {record.LongitudeIndicator}"); 
-                   Console.WriteLine($"    Speed:     {record.GroundSpeed}"); 
-                   Console.WriteLine($"    Bearing:   {record.Bearing}"); 
+                   Console.WriteLine($"  BaseID {record.BaseIdentifier} {record.At}"); 
+                   Console.WriteLine($"    Location: {record.Latitude} {record.LatitudeIndicator}, {record.Longitude} {record.LongitudeIndicator} ({record.Status})"); 
+                   Console.WriteLine($"    Heading:  {(record.Bearing.HasValue ? record.Bearing.Value.ToString() : "-")} @ {record.GroundSpeed} knots");
                 }
             };
             receiver.OnError += (sender, e) =>
