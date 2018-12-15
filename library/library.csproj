@@ -1,6 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>InvertedTomato.MictraceReceiver</PackageId>
+    <Title>Mictrace Receiver</Title>
+    <Authors>Inverted Tomato</Authors>
+    <Description>A beacon receiver for Mictrace GPS trackers.</Description>
+    <PackageDescription>A beacon receiver for Mictrace GPS trackers.</PackageDescription>
+    <Summary>A beacon receiver for Mictrace GPS trackers.</Summary>
+    <PackageLicenseUrl>https://github.com/invertedtomato/mictrack-receiver/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/invertedtomato/mictrack-receiver</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/invertedtomato/mictrack-receiver</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageVersion>1.0.3</PackageVersion>
+    <Tags>mictrace receiver gps</Tags>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Net.Sockets" Version="4.3.0"/>
