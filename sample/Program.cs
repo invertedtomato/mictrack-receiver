@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Linq;
 
 namespace InvertedTomato.IO.Mictrack
 {
@@ -12,11 +13,16 @@ namespace InvertedTomato.IO.Mictrack
             var receiver = new MictrackReceiver();
             receiver.OnBeacon += (sender, e) =>
             {
-                Console.WriteLine("Beacon!");
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine(e.RemoteAddressString + ": " + e.Beacon.IMEI+ " "+e.Beacon.Status);
+                foreach(var record in e.Beacon.Records){
+                   Console.WriteLine($"  {record.Latitude} {record.LatitudeIndicator}, {record.Longitiude} {record.LongitiudeIndicator}"); 
+                }
             };
             receiver.OnError += (sender, e) =>
             {
-                Console.WriteLine("Error!");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.RemoteAddressString + ": " + e.Message);
             };
             Console.WriteLine("done.");
 
@@ -26,8 +32,10 @@ namespace InvertedTomato.IO.Mictrack
 
             Console.WriteLine();
             Console.WriteLine("Running. Press 'Q' to terminate.");
-            if(Debugger.IsAttached){
-                while(true){
+            if (Debugger.IsAttached) // TODO: Fix properly
+            {
+                while (true)
+                {
                     Thread.Sleep(1000);
                 }
             }

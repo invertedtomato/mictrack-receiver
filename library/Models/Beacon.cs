@@ -1,58 +1,85 @@
 using System;
+using System.Collections.Generic;
 
 namespace InvertedTomato.IO.Mictrack.Models
 {
     public class Beacon
     {
+        /// <summary>
+        /// IMEI (15 digits).
+        /// </summary>
         public String IMEI { get; set; } // 15 digits
-        public String GPRSUsername { get; set; }
-        public String GPRSPassword { get; set; }
-        public Events Event { get; set; }
-        public String BaseIdentifier { get; set; }
-        public DateTime At { get; set; }
-        public Statuses Status { get; set; }
-        public Double Latitude { get; set; }
-        public LatitudeIndicators LatitudeIndicator { get; set; }
-        public Double Longitiude { get; set; }
-        public LongitudeIndicators LongitiudeIndicator { get; set; }
-        public Double GroundSpeed { get; set; } // Knots
-        public Double Bearing { get; set; } // Degrees
 
-        public enum Events : Byte
-        {
-            None,
-            PowerSaveStopped,
-            PowerSaveMoving,
-            Call,
-            Disconnect,
-            HighTemperature,
-            InternalBatteryLow,
-            ExternalBatteryLow,
-            GeoFenceEnter,
-            GeoFenceExit,
-            SpeedLimitOver,
-            SpeedLimitUnder
-        }
+        /// <summary>
+        /// GPRS user name.
+        /// </summary>
+        public String GPRSUsername { get; set; }
+
+        /// <summary>
+        /// GPRS password.
+        /// </summary>
+        public String GPRSPassword { get; set; }
+
+        /// <summary>
+        /// Upload status.
+        /// </summary>
+        public Statuses Status { get; set; }
+
+        /// <summary>
+        /// Position records.
+        /// </summary>
+        public IList<BeaconRecord> Records { get; set; }
 
         public enum Statuses : Byte
         {
-            Valid,
-            Invalid
-        }
-
-        public enum LatitudeIndicators : Byte
-        {
-            North,
-            South
-        }
-
-        public enum LongitudeIndicators : Byte
-        {
-            East,
-            West
+            /// <summary>
+            /// Normal mode.
+            /// </summary>
+            None,
+            /// <summary>
+            /// Power saving mode and vehicle stopped.
+            /// </summary>
+            PowerSaveStopped,
+            /// <summary>
+            /// Power saving mode and vehicle moving.
+            /// </summary>
+            PowerSaveMoving,
+            /// <summary>
+            /// Call alert (MP90 only).
+            /// </summary>
+            Call,
+            /// <summary>
+            /// Unplug alert.
+            /// </summary>
+            Disconnect,
+            /// <summary>
+            /// High temperature alert.
+            /// </summary>
+            HighTemperature,
+            /// <summary>
+            /// Internal battery low voltage.
+            /// </summary>
+            InternalBatteryLow,
+            /// <summary>
+            /// External battery low voltage.
+            /// </summary>
+            ExternalBatteryLow,
+            /// <summary>
+            /// Out of the Geo-fence alarm.
+            /// </summary>
+            GeoFenceEnter,
+            /// <summary>
+            /// Enter the Geo-fence alarm.
+            /// </summary>
+            GeoFenceExit,
+            /// <summary>
+            /// Over-speed alarm.
+            /// </summary>
+            SpeedLimitOver,
+            /// <summary>
+            /// Safe-speed alarm.
+            /// </summary>
+            SpeedLimitUnder
         }
     }
-
-
-
 }

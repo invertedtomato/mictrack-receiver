@@ -1,5 +1,7 @@
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using InvertedTomato.IO.Mictrack.Models;
 
@@ -24,190 +26,209 @@ namespace InvertedTomato.IO.Mictrack
             // ##
             // ----------------
 
+            // Split into lines
+            var lines = message.Split(new string[] { "\r\n" }, StringSplitOptions.None);
 
-            var lines = message.Split(new Char[] { '\r', '\n' });
-            if (lines.Length != 2)
+            // Check basic sanity
+            if (lines.Length < 3)
             {
-                throw new ProtocolViolationException("Message does not contain precisely two '\\r\\n's.");
+                throw new ProtocolViolationException("Message does not contain at least three lines.");
+            }
+            if (lines[lines.Length - 2] != "##")
+            {
+                throw new ProtocolViolationException("Second last line of message is not '##'.");
+            }
+            if (lines[lines.Length - 1] != "")
+            {
+                throw new ProtocolViolationException("Last line of message is not blank.");
             }
 
-            var tokens1 = lines[0].Split('#');
-            if (tokens1.Length != 4)
+            // Prepare output
+            var beacon = new Beacon()
             {
-                throw new ProtocolViolationException("First line does not contain precisely 5 '#'s.");
-            }
+                Records = new List<BeaconRecord>()
+            };
 
-            var tokens2 = lines[1].Split(',');
-            if (tokens2.Length != 13)
+            // Prepare parse header
+            var tokens = lines[0].Split('#');
+            if (tokens.Length < 6)
             {
-                throw new ProtocolViolationException("Second lines does not contain precisely 13 ','s.");
-            }
-
-            if (lines[2] != "##")
-            {
-                throw new ProtocolViolationException("Third line does not consist of exactly '##'.");
+                throw new ProtocolViolationException($"Header line contains {tokens.Length} hashes, rather than the minimum 6 expected.");
             }
 
             // IMEI
-            var imei = tokens1[1];
+            beacon.IMEI = tokens[1];
 
             // GPRSUsername
-            var gprsUsername = tokens1[2];
+            beacon.GPRSUsername = tokens[2];
 
             // GPRSPassword
-            var gprsPassword = tokens1[3];
+            beacon.GPRSPassword = tokens[3];
 
             // Event ("status")
-            Beacon.Events evt;
-            switch (tokens1[4])
+            switch (tokens[4])
             {
                 case "AUTO":
-                    evt = Beacon.Events.None;
+                    beacon.Status = Beacon.Statuses.None;
                     break;
                 case "AUTOLOW":
-                    evt = Beacon.Events.PowerSaveStopped;
+                    beacon.Status = Beacon.Statuses.PowerSaveStopped;
                     break;
                 case "TOWED":
-                    evt = Beacon.Events.PowerSaveMoving;
+                    beacon.Status = Beacon.Statuses.PowerSaveMoving;
                     break;
                 case "CALL":
-                    evt = Beacon.Events.Call;
+                    beacon.Status = Beacon.Statuses.Call;
                     break;
                 case "DEF":
-                    evt = Beacon.Events.Disconnect;
+                    beacon.Status = Beacon.Statuses.Disconnect;
                     break;
                 case "HT":
-                    evt = Beacon.Events.HighTemperature;
+                    beacon.Status = Beacon.Statuses.HighTemperature;
                     break;
                 case "BLP":
-                    evt = Beacon.Events.InternalBatteryLow;
+                    beacon.Status = Beacon.Statuses.InternalBatteryLow;
                     break;
                 case "CLP":
-                    evt = Beacon.Events.ExternalBatteryLow;
+                    beacon.Status = Beacon.Statuses.ExternalBatteryLow;
                     break;
                 case "OS":
-                    evt = Beacon.Events.GeoFenceExit;
+                    beacon.Status = Beacon.Statuses.GeoFenceExit;
                     break;
                 case "RS":
-                    evt = Beacon.Events.GeoFenceEnter;
+                    beacon.Status = Beacon.Statuses.GeoFenceEnter;
                     break;
                 case "OVERSPEED":
-                    evt = Beacon.Events.SpeedLimitOver;
+                    beacon.Status = Beacon.Statuses.SpeedLimitOver;
                     break;
                 case "SAFESPEED":
-                    evt = Beacon.Events.SpeedLimitUnder;
+                    beacon.Status = Beacon.Statuses.SpeedLimitUnder;
                     break;
                 default:
-                    throw new ProtocolViolationException($"Unable to parse Event from '{tokens1[4]}'.");
+                    throw new ProtocolViolationException($"Unable to parse Header Status of '{tokens[4]}'.");
             }
 
             // "Quantity"
-            var dataQuantity = tokens1[5];
-
-            // BaseID
-            var baseIdentifier = tokens2[1];
-
-            // "MessageID"
-            if (tokens2[2] != "$GPRMC")
+            if (!Int32.TryParse(tokens[5], out var dataQuantity))
             {
-                throw new ProtocolViolationException($"Incorrect message header. Found '{tokens2[2]}' but expecting '$GPRMC'.");
-
+                throw new ProtocolViolationException($"Unable to parse Data Quantity of '{tokens[5]}'.");
+            }
+            if (lines.Length - 3 != dataQuantity)
+            {
+                throw new ProtocolViolationException($"Number of lines does not match Data Quantity of '{dataQuantity}'.");
             }
 
-            // At
-            if (!DateTime.TryParseExact(tokens2[11] + " " + tokens2[3], "DDMMYY hhMMss.ss", null, System.Globalization.DateTimeStyles.AssumeUniversal, out var at))
+            for (var i = 1; i < lines.Length - 2; i++)
             {
-                throw new ProtocolViolationException($"Unable to parse At from '{tokens2[11]} {tokens2[3]}'.");
+                tokens = lines[i].Split(',');
+                if (tokens.Length < 13)
+                {
+                    throw new ProtocolViolationException($"Lines contains {tokens.Length} tokens, rather than the minimum expected 13.");
+                }
+
+                // BaseID
+                var baseIdentifier = tokens[0];
+
+                // At
+                if (!DateTime.TryParseExact(tokens[9] + " " + tokens[1], "ddMMyy hhmmss.ff", CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var at))
+                {
+                    throw new ProtocolViolationException($"Unable to parse At from '{tokens[11]} {tokens[3]}'.");
+                }
+
+                // Status
+                BeaconRecord.Statuses status;
+                switch (tokens[2])
+                {
+                    case "A":
+                        status = BeaconRecord.Statuses.Valid;
+                        break;
+                    case "V":
+                        status = BeaconRecord.Statuses.Invalid;
+                        break;
+                    default:
+                        throw new ProtocolViolationException($"Unable to parse Status from '{tokens[2]}'.");
+                }
+
+                // Latitude
+                if (!Double.TryParse(tokens[3], out var latitude))
+                {
+                    throw new ProtocolViolationException($"Unable to parse Latitude from '{tokens[3]}'.");
+                }
+
+                // LatitudeIndicator
+                BeaconRecord.LatitudeIndicators latitudeIndicator;
+                switch (tokens[4])
+                {
+                    case "N":
+                        latitudeIndicator = BeaconRecord.LatitudeIndicators.North;
+                        break;
+                    case "S":
+                        latitudeIndicator = BeaconRecord.LatitudeIndicators.South;
+                        break;
+                    default:
+                        throw new ProtocolViolationException($"Unable to parse LatitudeIndicator from '{tokens[4]}'.");
+                }
+
+                // Longitude
+                if (!Double.TryParse(tokens[5], out var longitude))
+                {
+                    throw new ProtocolViolationException($"Unable to parse Latitude from '{tokens[5]}'.");
+                }
+
+                // LongitudeIndicator
+                BeaconRecord.LongitudeIndicators longitudeIndicator;
+                switch (tokens[6])
+                {
+                    case "E":
+                        longitudeIndicator = BeaconRecord.LongitudeIndicators.East;
+                        break;
+                    case "W":
+                        longitudeIndicator = BeaconRecord.LongitudeIndicators.West;
+                        break;
+                    default:
+                        throw new ProtocolViolationException($"Unable to parse LongitudeIndicator from '{tokens[6]}'.");
+                }
+
+                // GroundSpeed
+                if (!Double.TryParse(tokens[7], out var groundSpeed))
+                {
+                    throw new ProtocolViolationException($"Unable to parse GroundSpeed from '{tokens[7]}'.");
+                }
+
+                // Bearing
+                Double? bearing = null;
+                if (tokens[8] != string.Empty) // TODO: this block smells bad
+                {
+                    if (Double.TryParse(tokens[8], out var bearingCompute))
+                    {
+                        bearing = bearingCompute;
+                    }
+                    else
+                    {
+                        throw new ProtocolViolationException($"Unable to parse Bearing from '{tokens[8]}'.");
+                    }
+                }
+
+                // "Checksum"
+                var checksum = tokens[12];
+
+                beacon.Records.Add(new BeaconRecord()
+                {
+                    BaseIdentifier = baseIdentifier,
+
+                    At = at,
+                    Status = status,
+                    Latitude = latitude,
+                    LatitudeIndicator = latitudeIndicator,
+                    Longitiude = longitude,
+                    LongitiudeIndicator = longitudeIndicator,
+                    GroundSpeed = groundSpeed,
+                    Bearing = bearing
+                });
             }
 
-            // Status
-            Beacon.Statuses status;
-            switch (tokens2[12])
-            {
-                case "A":
-                    status = Beacon.Statuses.Valid;
-                    break;
-                case "V":
-                    status = Beacon.Statuses.Invalid;
-                    break;
-                default:
-                    throw new ProtocolViolationException($"Unable to parse Status from '{tokens2[12]}'.");
-            }
+            return beacon;
 
-            // Latitude
-            if (!Double.TryParse(tokens2[13], out var latitude))
-            {
-                throw new ProtocolViolationException($"Unable to parse Latitude from '{tokens2[13]}'.");
-            }
-
-            // LatitudeIndicator
-            Beacon.LatitudeIndicators latitudeIndicator;
-            switch (tokens2[14])
-            {
-                case "N":
-                    latitudeIndicator = Beacon.LatitudeIndicators.North;
-                    break;
-                case "S":
-                    latitudeIndicator = Beacon.LatitudeIndicators.South;
-                    break;
-                default:
-                    throw new ProtocolViolationException($"Unable to parse LatitudeIndicator from '{tokens2[14]}'.");
-            }
-
-            // Longitude
-            if (!Double.TryParse(tokens2[15], out var longitude))
-            {
-                throw new ProtocolViolationException($"Unable to parse Latitude from '{tokens2[15]}'.");
-            }
-
-            // LongitudeIndicator
-            Beacon.LongitudeIndicators longitudeIndicator;
-            switch (tokens2[16])
-            {
-                case "E":
-                    longitudeIndicator = Beacon.LongitudeIndicators.East;
-                    break;
-                case "W":
-                    longitudeIndicator = Beacon.LongitudeIndicators.West;
-                    break;
-                default:
-                    throw new ProtocolViolationException($"Unable to parse LongitudeIndicator from '{tokens2[16]}'.");
-            }
-
-            // GroundSpeed
-            if (!Double.TryParse(tokens2[17], out var groundSpeed))
-            {
-                throw new ProtocolViolationException($"Unable to parse GroundSpeed from '{tokens2[17]}'.");
-            }
-
-            // Bearing
-            if (!Double.TryParse(tokens2[18], out var bearing))
-            {
-                throw new ProtocolViolationException($"Unable to parse Bearing from '{tokens2[18]}'.");
-            }
-
-            // "Checksum"
-            var checksum = tokens2[19];
-
-            // Create beacon
-            return new Beacon()
-            {
-                IMEI = imei,
-                GPRSUsername = gprsUsername,
-                GPRSPassword = gprsPassword,
-                Event = evt,
-
-                BaseIdentifier = baseIdentifier,
-
-                At = at,
-                Status = status,
-                Latitude = latitude,
-                LatitudeIndicator = latitudeIndicator,
-                Longitiude = longitude,
-                LongitiudeIndicator = longitudeIndicator,
-                GroundSpeed = groundSpeed,
-                Bearing = bearing
-            };
         }
     }
 }

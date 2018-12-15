@@ -39,9 +39,11 @@ namespace InvertedTomato.IO.Mictrack
         public Int32 ConnectionBacklogLimit { get; set; } = 10;
 
         /// <summary>
-        /// Size of receive buffer - this must be at least as long as the longest possible message
+        /// Size of first (byte array) receive buffer. Messages longer than this can be received, however will take multiple context switches.
         /// </summary>
-        private const Int32 RXBUFFER_LENGTH = 256; // Documtation example is 121 bytes
+        private const Int32 RXBUFFER1_LENGTH = 256;
+
+        private const String MESSAGE_SEPERATOR = "##\r\n";
 
         public delegate void OnBeaconEventHandler(Object sender, OnBeaconEventArgs e);
 
@@ -109,8 +111,8 @@ namespace InvertedTomato.IO.Mictrack
             // Create state
             var state = new ConnectionState()
             {
-                Buffer = new Byte[RXBUFFER_LENGTH],
-                Position = 0, // Obviously not required, but here for completeness
+                Buffer1 = new byte[RXBUFFER1_LENGTH],
+                Buffer2 = string.Empty,
                 Connection = connection,
                 RemoteAddressString = ((IPEndPoint)connection.RemoteEndPoint).Address.ToString() // This is not available on the socket once it's error'd, so capture it now
             };
@@ -124,23 +126,10 @@ namespace InvertedTomato.IO.Mictrack
 
         private void ReceiveStart(ConnectionState state)
         {
-            // Check buffer isn't alreay full
-            if (state.Position == state.Buffer.Length)
-            {
-                // Report error
-                OnError?.Invoke(this, new OnErrorEventArgs()
-                {
-                    Message = $"Message exceeds length limit of {state.Buffer.Length} bytes.",
-                    RemoteAddressString = state.RemoteAddressString
-                });
-                return; // Abort receive 
-            }
-
             // Begin receive
-            // TODO: Handle case where we receive more data than buffer capacity
             try
             {
-                state.Connection.BeginReceive(state.Buffer, state.Position, state.Buffer.Length - state.Position, SocketFlags.None, new AsyncCallback(ReceiveEnd), state);
+                state.Connection.BeginReceive(state.Buffer1, 0, state.Buffer1.Length, SocketFlags.None, new AsyncCallback(ReceiveEnd), state);
             }
             catch (ObjectDisposedException) // Occurs during in-flight disposal - we need to catch it for a graceful shutdown
             {
@@ -164,9 +153,10 @@ namespace InvertedTomato.IO.Mictrack
             var state = (ConnectionState)ar.AsyncState;
 
             // Complete read
+            Int32 len;
             try
             {
-                state.Position += state.Connection.EndReceive(ar);
+                len = state.Connection.EndReceive(ar);
             }
             catch (ObjectDisposedException) // Occurs during in-flight disposal - we need to catch it for a graceful shutdown
             {
@@ -183,11 +173,24 @@ namespace InvertedTomato.IO.Mictrack
                 return; // Abort receive - not needed since there's nothing after this code block - but there might be in a future refactor!
             }
 
-            // If the message is complete...
-            if (state.Position > 2 && state.Buffer[state.Position] == '#' && state.Buffer[state.Position - 1] == '#')
+            // Decode chunk in first buffer
+            var chunk = Encoding.ASCII.GetString(state.Buffer1, 0, len);
+
+            // Append to second buffer
+            state.Buffer2 += chunk;
+
+            // Cycle through each message in the buffer (0 or more)
+            var pos = state.Buffer2.IndexOf(MESSAGE_SEPERATOR); // TODO: this buffer management smells bad - it'll work, but I'm sure there's a more performant design
+            while (pos > 0)
             {
-                // Decode message
-                var message = Encoding.ASCII.GetString(state.Buffer, 0, state.Position);
+                // Extract next message from buffer
+                var message = state.Buffer2.Substring(0, pos);
+
+                // Trim buffer
+                state.Buffer2 = state.Buffer2.Substring(pos + MESSAGE_SEPERATOR.Length);
+
+                // Find next message, if present
+                pos = state.Buffer2.IndexOf(MESSAGE_SEPERATOR);
 
                 // Process message
                 try
@@ -212,11 +215,9 @@ namespace InvertedTomato.IO.Mictrack
                     });
                 }
             }
-            else
-            {
-                // Receive more
-                ReceiveStart(state);
-            }
+
+            // Receive more
+            ReceiveStart(state);
         }
         protected virtual void Dispose(bool disposing)
         {

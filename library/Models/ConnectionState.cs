@@ -1,5 +1,6 @@
 using System;
 using System.Net.Sockets;
+using System.Text;
 
 namespace InvertedTomato.IO.Mictrack.Models
 {
@@ -7,9 +8,9 @@ namespace InvertedTomato.IO.Mictrack.Models
     {
         public Socket Connection { get; set; }
 
-        public Int32 Position { get; set; }
+        public Byte[] Buffer1 { get; set; }
 
-        public Byte[] Buffer { get; set; }
+        public String Buffer2 { get; set; } // Minimal advantage of using a StringBuilder here
 
         public String RemoteAddressString { get; set; }
     }
