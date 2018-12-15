@@ -5,9 +5,7 @@ namespace InvertedTomato.IO.Mictrack.Models
 {
     public class OnErrorEventArgs
     {
-        public IPEndPoint RemoteAddress { get; set; }
-
-        public String RemoteAddressString { get { return RemoteAddress.ToString(); } }
+        public String RemoteAddressString { get; set; }
 
         public String Message { get; set; }
     }
