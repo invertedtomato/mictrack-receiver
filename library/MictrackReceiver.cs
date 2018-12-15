@@ -24,7 +24,7 @@ namespace InvertedTomato.IO.Mictrack
         public Boolean IsDisposed { get; private set; }
 
         /// <summary>
-        /// If the receiver is currently running and available to recieve beacons.
+        /// If the receiver is currently running and available to receive beacons.
         /// </summary>
         public Boolean IsRunning { get; private set; }
 
@@ -160,7 +160,7 @@ namespace InvertedTomato.IO.Mictrack
             }
             catch (ObjectDisposedException) // Occurs during in-flight disposal - we need to catch it for a graceful shutdown
             {
-                return; // Abort reawd
+                return; // Abort read
             }
             catch (SocketException ex) // Occurs when there is a connection error
             {
@@ -239,7 +239,7 @@ namespace InvertedTomato.IO.Mictrack
         }
 
         /// <summary>
-        /// Stop listening for beacons if started, and then destroy all managed resourceas.
+        /// Stop listening for beacons if started, and then destroy all managed resources
         /// </summary>
         public void Dispose()
         {

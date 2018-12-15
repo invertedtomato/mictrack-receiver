@@ -18,7 +18,7 @@ namespace InvertedTomato.IO.Mictrack
                 foreach(var record in e.Beacon.Records){
                    Console.WriteLine($"  {record.BaseIdentifier} {record.Status}"); 
                    Console.WriteLine($"    Latitude:  {record.Latitude} {record.LatitudeIndicator}");
-                   Console.WriteLine($"    Longitude: {record.Longitiude} {record.LongitiudeIndicator}"); 
+                   Console.WriteLine($"    Longitude: {record.Longitude} {record.LongitudeIndicator}"); 
                    Console.WriteLine($"    Speed:     {record.GroundSpeed}"); 
                    Console.WriteLine($"    Bearing:   {record.Bearing}"); 
                    Console.WriteLine($"    At:        {record.At}"); 

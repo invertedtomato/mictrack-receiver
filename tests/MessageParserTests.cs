@@ -27,8 +27,8 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(BeaconRecord.Statuses.Valid, record.Status);
             Assert.Equal(2741.6724, record.Latitude);
             Assert.Equal(BeaconRecord.LatitudeIndicators.South, record.LatitudeIndicator);
-            Assert.Equal(15309.1364, record.Longitiude);
-            Assert.Equal(BeaconRecord.LongitudeIndicators.East, record.LongitiudeIndicator);
+            Assert.Equal(15309.1364, record.Longitude);
+            Assert.Equal(BeaconRecord.LongitudeIndicators.East, record.LongitudeIndicator);
             Assert.Equal(0.05, record.GroundSpeed);
             Assert.Null(record.Bearing);
         }
@@ -47,8 +47,8 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(BeaconRecord.Statuses.Valid, record.Status);
             Assert.Equal(2237.7776, record.Latitude);
             Assert.Equal(BeaconRecord.LatitudeIndicators.North, record.LatitudeIndicator);
-            Assert.Equal(11402.1399, record.Longitiude);
-            Assert.Equal(BeaconRecord.LongitudeIndicators.East, record.LongitiudeIndicator);
+            Assert.Equal(11402.1399, record.Longitude);
+            Assert.Equal(BeaconRecord.LongitudeIndicators.East, record.LongitudeIndicator);
             Assert.Equal(0.07, record.GroundSpeed);
             Assert.Equal(309.62, record.Bearing);
         }

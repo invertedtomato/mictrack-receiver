@@ -11,7 +11,7 @@ namespace InvertedTomato.IO.Mictrack.Models
         public String IMEI { get; set; } // 15 digits
 
         /// <summary>
-        /// GPRS user name.
+        /// GPRS username.
         /// </summary>
         public String GPRSUsername { get; set; }
 
@@ -65,11 +65,11 @@ namespace InvertedTomato.IO.Mictrack.Models
             /// </summary>
             ExternalBatteryLow,
             /// <summary>
-            /// Out of the Geo-fence alarm.
+            /// Out of the geo-fence alarm.
             /// </summary>
             GeoFenceEnter,
             /// <summary>
-            /// Enter the Geo-fence alarm.
+            /// Enter the geo-fence alarm.
             /// </summary>
             GeoFenceExit,
             /// <summary>

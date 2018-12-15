@@ -24,7 +24,7 @@ namespace InvertedTomato.IO.Mictrack.Models
         public Statuses Status { get; set; }
 
         /// <summary>
-        /// Latitude at time of reading (ddmm.mmmm)
+        /// Latitude at time of reading (ddmm.mmmm).
         /// </summary>
         public Double Latitude { get; set; }
 
@@ -34,14 +34,14 @@ namespace InvertedTomato.IO.Mictrack.Models
         public LatitudeIndicators LatitudeIndicator { get; set; }
 
         /// <summary>
-        /// Longitude at time of reading (Dddmm.mmmm)
+        /// Longitude at time of reading (Dddmm.mmmm).
         /// </summary>
-        public Double Longitiude { get; set; }
+        public Double Longitude { get; set; }
 
         /// <summary>
         /// East or west.
         /// </summary>
-        public LongitudeIndicators LongitiudeIndicator { get; set; }
+        public LongitudeIndicators LongitudeIndicator { get; set; }
 
         /// <summary>
         /// Speed at ground level, in knots.

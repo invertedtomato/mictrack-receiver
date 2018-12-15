@@ -220,8 +220,8 @@ namespace InvertedTomato.IO.Mictrack
                     Status = status,
                     Latitude = latitude,
                     LatitudeIndicator = latitudeIndicator,
-                    Longitiude = longitude,
-                    LongitiudeIndicator = longitudeIndicator,
+                    Longitude = longitude,
+                    LongitudeIndicator = longitudeIndicator,
                     GroundSpeed = groundSpeed,
                     Bearing = bearing
                 });
