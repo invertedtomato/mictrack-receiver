@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 
 namespace InvertedTomato.IO.Mictrack
 {
@@ -24,6 +26,11 @@ namespace InvertedTomato.IO.Mictrack
 
             Console.WriteLine();
             Console.WriteLine("Running. Press 'Q' to terminate.");
+            if(Debugger.IsAttached){
+                while(true){
+                    Thread.Sleep(1000);
+                }
+            }
             while (Console.ReadKey(true).Key != ConsoleKey.Q) { }
         }
     }
