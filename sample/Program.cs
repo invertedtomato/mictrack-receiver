@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Linq;
+using InvertedTomato.IO.Mictrack.Models;
 
 namespace InvertedTomato.IO.Mictrack
 {
@@ -15,10 +16,29 @@ namespace InvertedTomato.IO.Mictrack
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine($"IMEI {e.Beacon.IMEI} ({e.Beacon.Status})");
-                foreach(var record in e.Beacon.Records){
-                   Console.WriteLine($"  BaseID {record.BaseIdentifier} {record.At}"); 
-                   Console.WriteLine($"    Location: {record.Latitude} {record.LatitudeIndicator}, {record.Longitude} {record.LongitudeIndicator} ({record.Status})"); 
-                   Console.WriteLine($"    Heading:  {(record.Bearing.HasValue ? record.Bearing.Value.ToString() : "-")} @ {record.GroundSpeed} knots");
+                foreach (var record in e.Beacon.Records)
+                {
+                    Console.WriteLine($"  BaseID {record.BaseIdentifier} {record.At}");
+
+                    // Current location
+                    if (record.Status == BeaconRecord.Statuses.Valid)
+                    {
+                        Console.WriteLine($"    Location: {record.Latitude} {record.LatitudeIndicator}, {record.Longitude} {record.LongitudeIndicator}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"    Location: unknown");
+                    }
+
+                    // Heading
+                    if (record.Bearing.HasValue)
+                    {
+                        Console.WriteLine($"    Heading:  {record.Bearing} deg @ {record.GroundSpeed} knots");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"    Heading:  not currently moving");
+                    }
                 }
             };
             receiver.OnError += (sender, e) =>
