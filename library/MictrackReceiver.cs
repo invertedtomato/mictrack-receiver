@@ -32,9 +32,9 @@ namespace InvertedTomato.IO.Mictrack
         public Boolean IsRunning { get; private set; }
 
         /// <summary>
-        /// The local endpoint used for listening. This is where you can set the listening port and/or IP address.
+        /// The local endpoint used for listening. This is where you can set the listening port and/or IP address. By default this is all IPs on port 7700 (IPv6 and IPv6).
         /// </summary>
-        public IPEndPoint LocalEndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 5000); // TODO: Is there an "official" default port?
+        public IPEndPoint LocalEndPoint { get; set; } = new IPEndPoint(IPAddress.Any, 7700); 
 
         /// <summary>
         /// The number of pending connections that will be queued waiting to be processed.
@@ -123,7 +123,7 @@ namespace InvertedTomato.IO.Mictrack
                 BinaryBuffer = new byte[BINARYBUFFER_LENGTH],
                 StringBuffer = string.Empty,
                 Connection = connection,
-                RemoteAddressString = ((IPEndPoint)connection.RemoteEndPoint).Address.ToString() // This is not available on the socket once it's error'd, so capture it now
+                RemoteAddressString = ((IPEndPoint)connection.RemoteEndPoint).Address.ToString() // This is not available on the socket once it's in a erred state, so capture it now
             };
 
             // Start read cycle
@@ -186,7 +186,7 @@ namespace InvertedTomato.IO.Mictrack
             var chunk = Encoding.ASCII.GetString(state.BinaryBuffer, 0, chunkLength);
 
             // Append to second buffer
-            state.StringBuffer += chunk; // This is the step that might be optimised with StringBuilder, but usually it occurs just once per message and the overheads probably negate it's advantage (untested theory)
+            state.StringBuffer += chunk; // This is the step that might be optimized with StringBuilder, but usually it occurs just once per message and the overheads probably negate it's advantage (untested theory)
 
             // Cycle through each message in the buffer (0 or more - but probably exactly 1)
             var pos = state.StringBuffer.IndexOf(MESSAGE_SEPERATOR); // TODO: this buffer management smells bad - it'll work, but I'm sure there's a more performant design

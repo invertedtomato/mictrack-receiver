@@ -27,7 +27,7 @@ Console.ReadKey(true);
 ```
 
 ## TCP Ports
-With an apparent absence of a default port, this uses port 5000 as default. You can change this, and the locally bound IP by modifying the LocalEndPoint field before starting.
+By default the receiver listens on all IPs on port 7700 - both on IPv4 and IPv6. You can change by modifying the `LocalEndPoint` property before calling `Start()`.
 
 ## Protocol
 MictrackReceiver is based on the [official protocol documentation](https://www.mictrack.com/downloads/protocols/Mictrack_Communication_Protocol_For_MP90&MP90-NB.pdf). For protocol documentation it's pretty rough and assumptions have been made in some places. To verify those assumptions the library has been tested with MT600s.
