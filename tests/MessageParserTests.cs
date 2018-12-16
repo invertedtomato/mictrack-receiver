@@ -24,7 +24,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(Beacon.Statuses.PowerSaveStationary, beacon.Status);
 
             var record = beacon.Records.Single();
-            Assert.Equal("12/12/2018 09:38:08", record.At.ToString());
+            Assert.Equal("2018-12-12T09:38:08.0000000", record.At.ToString("o"));
             Assert.Equal(BeaconRecord.Statuses.Valid, record.Status);
             Assert.Equal(2741.6724, record.Latitude);
             Assert.Equal(BeaconRecord.LatitudeIndicators.South, record.LatitudeIndicator);
@@ -44,7 +44,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(Beacon.Statuses.None, beacon.Status);
 
             var record = beacon.Records.Single();
-            Assert.Equal("01/03/2016 09:46:32", record.At.ToString());
+            Assert.Equal("2016-01-03T09:46:32.0000000", record.At.ToString("o"));
             Assert.Equal(BeaconRecord.Statuses.Valid, record.Status);
             Assert.Equal(2237.7776, record.Latitude);
             Assert.Equal(BeaconRecord.LatitudeIndicators.North, record.LatitudeIndicator);
@@ -57,14 +57,14 @@ namespace InvertedTomato.IO.Mictrace
         [Fact]
         public void EndToEnd_3()
         {
-            var beacon = MessageParser.Parse(Messages[3]);
+            var beacon = MessageParser.Parse(Messages[2]);
             Assert.Equal("963835023427632", beacon.IMEI);
             Assert.Equal("MT600", beacon.GPRSUsername);
             Assert.Equal("0000", beacon.GPRSPassword);
-            Assert.Equal(Beacon.Statuses.PowerSaveStationary, beacon.Status);
+            Assert.Equal(Beacon.Statuses.None, beacon.Status);
 
             var record = beacon.Records.Single();
-            Assert.Equal("12/12/2018 13:46:32", record.At.ToString());
+            Assert.Equal("2020-12-30T13:46:32.0000000", record.At.ToString("o"));
             Assert.Equal(BeaconRecord.Statuses.Invalid, record.Status);
             Assert.Equal(0, record.Latitude);
             Assert.Equal(BeaconRecord.LatitudeIndicators.North, record.LatitudeIndicator);

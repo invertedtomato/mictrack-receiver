@@ -9,8 +9,16 @@ namespace InvertedTomato.IO.Mictrack
 {
     public static class MessageParser
     {
+        private const Char HEADER_TOKENSEPERATOR = '#';
+        private const Char RECORD_TOKENSEPERATOR = ',';
+
         public static Beacon Parse(String message)
         {
+            if (null == message)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
             // See the protocol documentation https://www.mictrack.com/downloads/protocols/Mictrack_Communication_Protocol_For_MP90&MP90-NB.pdf
             // Inbound messages take the following form:
             // ----------------
@@ -43,193 +51,230 @@ namespace InvertedTomato.IO.Mictrack
                 throw new ProtocolViolationException("Last line of message is not blank.");
             }
 
-            // Prepare output
+            // Split header into tokens
+            var tokens = lines[0].Split(HEADER_TOKENSEPERATOR); // Header tokens are separated by "#"
+            if (tokens.Length < 6)
+            {
+                throw new ProtocolViolationException($"Header line contains {tokens.Length} tokens, rather than the minimum 6 expected.");
+            }
+
+            // Parse header
             var beacon = new Beacon()
             {
+                IMEI = ParseGenericString(tokens[1], "IMEI"),
+                GPRSUsername = ParseGenericString(tokens[2], "GPRSUsername"),
+                GPRSPassword = ParseGenericString(tokens[3], "GPRSPassword"),
+                Status = ParseHeaderStatus(tokens[4]),
                 Records = new List<BeaconRecord>()
             };
 
-            // Prepare parse header
-            var tokens = lines[0].Split('#');
-            if (tokens.Length < 6)
-            {
-                throw new ProtocolViolationException($"Header line contains {tokens.Length} hashes, rather than the minimum 6 expected.");
-            }
-
-            // IMEI
-            beacon.IMEI = tokens[1];
-
-            // GPRSUsername
-            beacon.GPRSUsername = tokens[2];
-
-            // GPRSPassword
-            beacon.GPRSPassword = tokens[3];
-
-            // Event ("status")
-            switch (tokens[4])
-            {
-                case "AUTO":
-                    beacon.Status = Beacon.Statuses.None;
-                    break;
-                case "AUTOLOW":
-                    beacon.Status = Beacon.Statuses.PowerSaveStationary;
-                    break;
-                case "TOWED":
-                    beacon.Status = Beacon.Statuses.PowerSaveMoving;
-                    break;
-                case "CALL":
-                    beacon.Status = Beacon.Statuses.Call;
-                    break;
-                case "DEF":
-                    beacon.Status = Beacon.Statuses.Disconnect;
-                    break;
-                case "HT":
-                    beacon.Status = Beacon.Statuses.HighTemperature;
-                    break;
-                case "BLP":
-                    beacon.Status = Beacon.Statuses.InternalBatteryLow;
-                    break;
-                case "CLP":
-                    beacon.Status = Beacon.Statuses.ExternalBatteryLow;
-                    break;
-                case "OS":
-                    beacon.Status = Beacon.Statuses.GeoFenceExit;
-                    break;
-                case "RS":
-                    beacon.Status = Beacon.Statuses.GeoFenceEnter;
-                    break;
-                case "OVERSPEED":
-                    beacon.Status = Beacon.Statuses.SpeedLimitOver;
-                    break;
-                case "SAFESPEED":
-                    beacon.Status = Beacon.Statuses.SpeedLimitUnder;
-                    break;
-                default:
-                    throw new ProtocolViolationException($"Unable to parse Header Status of '{tokens[4]}'.");
-            }
-
-            // "Quantity"
-            if (!Int32.TryParse(tokens[5], out var dataQuantity))
-            {
-                throw new ProtocolViolationException($"Unable to parse Data Quantity of '{tokens[5]}'.");
-            }
+            // Data Quantity
+            var dataQuantity = ParseGenericInteger(tokens[5], "DataQuantity");
             if (lines.Length - 3 != dataQuantity)
             {
                 throw new ProtocolViolationException($"Number of lines does not match Data Quantity of '{dataQuantity}'.");
             }
 
-            for (var i = 1; i < lines.Length - 2; i++)
+            // Loop through each record line
+            for (var i = 1; i < lines.Length - 2; i++) // Ignoring first header line and last two tail lines
             {
-                tokens = lines[i].Split(',');
+                // Split record into tokens
+                tokens = lines[i].Split(RECORD_TOKENSEPERATOR); // Record tokens are seperated by ','. No - I don't know why this differs from the header.
                 if (tokens.Length < 13)
                 {
                     throw new ProtocolViolationException($"Lines contains {tokens.Length} tokens, rather than the minimum expected 13.");
                 }
 
-                // BaseID
-                var baseIdentifier = tokens[0];
-
-                // At
-                if (!DateTime.TryParseExact(tokens[9] + " " + tokens[1], "ddMMyy HHmmss.ff", CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var at))
-                {
-                    throw new ProtocolViolationException($"Unable to parse At from '{tokens[9]} {tokens[1]}'.");
-                }
-
-                // Status
-                BeaconRecord.Statuses status;
-                switch (tokens[2])
-                {
-                    case "A":
-                        status = BeaconRecord.Statuses.Valid;
-                        break;
-                    case "V":
-                        status = BeaconRecord.Statuses.Invalid;
-                        break;
-                    default:
-                        throw new ProtocolViolationException($"Unable to parse Status from '{tokens[2]}'.");
-                }
-
-                // Latitude
-                if (!Double.TryParse(tokens[3], out var latitude))
-                {
-                    throw new ProtocolViolationException($"Unable to parse Latitude from '{tokens[3]}'.");
-                }
-
-                // LatitudeIndicator
-                BeaconRecord.LatitudeIndicators latitudeIndicator;
-                switch (tokens[4])
-                {
-                    case "N":
-                        latitudeIndicator = BeaconRecord.LatitudeIndicators.North;
-                        break;
-                    case "S":
-                        latitudeIndicator = BeaconRecord.LatitudeIndicators.South;
-                        break;
-                    default:
-                        throw new ProtocolViolationException($"Unable to parse LatitudeIndicator from '{tokens[4]}'.");
-                }
-
-                // Longitude
-                if (!Double.TryParse(tokens[5], out var longitude))
-                {
-                    throw new ProtocolViolationException($"Unable to parse Latitude from '{tokens[5]}'.");
-                }
-
-                // LongitudeIndicator
-                BeaconRecord.LongitudeIndicators longitudeIndicator;
-                switch (tokens[6])
-                {
-                    case "E":
-                        longitudeIndicator = BeaconRecord.LongitudeIndicators.East;
-                        break;
-                    case "W":
-                        longitudeIndicator = BeaconRecord.LongitudeIndicators.West;
-                        break;
-                    default:
-                        throw new ProtocolViolationException($"Unable to parse LongitudeIndicator from '{tokens[6]}'.");
-                }
-
-                // GroundSpeed
-                Double groundSpeed = 0;
-                if (tokens[7] != string.Empty && !Double.TryParse(tokens[7], out groundSpeed))
-                {
-                    throw new ProtocolViolationException($"Unable to parse GroundSpeed from '{tokens[7]}'.");
-                }
-
-                // Bearing
-                Double? bearing = null;
-                if (tokens[8] != string.Empty) // TODO: this block smells bad
-                {
-                    if (Double.TryParse(tokens[8], out var bearingCompute))
-                    {
-                        bearing = bearingCompute;
-                    }
-                    else
-                    {
-                        throw new ProtocolViolationException($"Unable to parse Bearing from '{tokens[8]}'.");
-                    }
-                }
-
-                // "Checksum"
-                var checksum = tokens[12];
-
+                // Add record to output
                 beacon.Records.Add(new BeaconRecord()
                 {
-                    BaseIdentifier = baseIdentifier,
-
-                    At = at,
-                    Status = status,
-                    Latitude = latitude,
-                    LatitudeIndicator = latitudeIndicator,
-                    Longitude = longitude,
-                    LongitudeIndicator = longitudeIndicator,
-                    GroundSpeed = groundSpeed,
-                    Bearing = bearing
+                    BaseIdentifier = ParseGenericString(tokens[0], "BaseIdentifier"),
+                    At = ParseAt(tokens[9], tokens[1]),
+                    Status = ParseStatus(tokens[2]),
+                    Latitude = ParseGenericDouble(tokens[3], "Latitude"),
+                    LatitudeIndicator = ParseLatitudeIndicator(tokens[4]),
+                    Longitude = ParseGenericDouble(tokens[5], "Longitude"),
+                    LongitudeIndicator = ParseLongitudeIndicator(tokens[6]),
+                    GroundSpeed = ParseGenericDouble(tokens[7], "GroundSpeed"),
+                    Bearing = ParseGenericNullableDouble(tokens[8], "Bearing")
                 });
             }
 
             return beacon;
+        }
 
+        public static Beacon.Statuses ParseHeaderStatus(String input)
+        {
+            if (null == input)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            switch (input)
+            {
+                case "AUTO": return Beacon.Statuses.None;
+                case "AUTOLOW": return Beacon.Statuses.PowerSaveStationary;
+                case "TOWED": return Beacon.Statuses.PowerSaveMoving;
+                case "CALL": return Beacon.Statuses.Call;
+                case "DEF": return Beacon.Statuses.Disconnect;
+                case "HT": return Beacon.Statuses.HighTemperature;
+                case "BLP": return Beacon.Statuses.InternalBatteryLow;
+                case "CLP": return Beacon.Statuses.ExternalBatteryLow;
+                case "OS": return Beacon.Statuses.GeoFenceExit;
+                case "RS": return Beacon.Statuses.GeoFenceEnter;
+                case "OVERSPEED": return Beacon.Statuses.SpeedLimitOver;
+                case "SAFESPEED": return Beacon.Statuses.SpeedLimitUnder;
+                default: throw new ProtocolViolationException($"Unable to parse Header Status of '{input}'.");
+            }
+        }
+
+        public static DateTime ParseAt(String dateInput, String timeInput)
+        {
+            if (null == dateInput)
+            {
+                throw new ArgumentNullException(nameof(dateInput));
+            }
+            if (null == timeInput)
+            {
+                throw new ArgumentNullException(nameof(timeInput));
+            }
+
+
+            var input = $"{dateInput} {timeInput}";
+            if (!DateTime.TryParseExact(input, "ddMMyy HHmmss.ff", CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var output))
+            {
+                throw new ProtocolViolationException($"Unable to parse At from '{input}'.");
+            }
+            return output;
+        }
+
+        public static BeaconRecord.Statuses ParseStatus(String input)
+        {
+            if (null == input)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            switch (input)
+            {
+                case "A": return BeaconRecord.Statuses.Valid;
+                case "V": return BeaconRecord.Statuses.Invalid;
+                default: throw new ProtocolViolationException($"Unable to parse Status from '{input}'.");
+            }
+        }
+
+        public static BeaconRecord.LatitudeIndicators ParseLatitudeIndicator(String input)
+        {
+            if (null == input)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            switch (input)
+            {
+                case "N": return BeaconRecord.LatitudeIndicators.North;
+                case "S": return BeaconRecord.LatitudeIndicators.South;
+                default: throw new ProtocolViolationException($"Unable to parse LatitudeIndicator from '{input}'.");
+            }
+        }
+
+        public static BeaconRecord.LongitudeIndicators ParseLongitudeIndicator(String input)
+        {
+            if (null == input)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            switch (input)
+            {
+                case "E": return BeaconRecord.LongitudeIndicators.East;
+                case "W": return BeaconRecord.LongitudeIndicators.West;
+                default: throw new ProtocolViolationException($"Unable to parse LongitudeIndicator from '{input}'.");
+            }
+        }
+
+        public static String ParseGenericString(String input, String field)
+        {
+            if (null == input)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+            if (null == field)
+            {
+                throw new ArgumentNullException(nameof(field));
+            }
+
+            if (input == String.Empty)
+            {
+                throw new ProtocolViolationException($"{field} is blank when it must contain a value.");
+            }
+
+            return input;
+        }
+
+        public static Int32 ParseGenericInteger(String input, String field)
+        {
+            if (null == input)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+            if (null == field)
+            {
+                throw new ArgumentNullException(nameof(field));
+            }
+
+            if (!Int32.TryParse(input, out var output))
+            {
+                throw new ProtocolViolationException($"Unable to parse {field} from '{input}'.");
+            }
+            return output;
+        }
+
+        public static Double ParseGenericDouble(String input, String field)
+        {
+            if (null == input)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+            if (null == field)
+            {
+                throw new ArgumentNullException(nameof(field));
+            }
+
+            // This protocol seems to consider empty strings and zeros as identically for doubles (check out a stationary GPS's ground speed), therefore make this a little more sane so it's easier for the downstream to handle
+            if (input == String.Empty)
+            {
+                return 0;
+            }
+
+            if (!Double.TryParse(input, out var output))
+            {
+                throw new ProtocolViolationException($"Unable to parse {field} from '{input}'.");
+            }
+            return output;
+        }
+
+        public static Double? ParseGenericNullableDouble(String input, String field)
+        {
+            if (null == input)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+            if (null == field)
+            {
+                throw new ArgumentNullException(nameof(field));
+            }
+
+            if (input == String.Empty)
+            {
+                return null;
+            }
+
+            if (!Double.TryParse(input, out var output))
+            {
+                throw new ProtocolViolationException($"Unable to parse {field} from '{input}'.");
+            }
+            return output;
         }
     }
 }
