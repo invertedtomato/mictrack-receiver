@@ -50,6 +50,116 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(new DateTime(2001, 1, 1, 1, 1, 1, 100), MessageParser.ParseAt("010101", "010101.1"));
             Assert.Equal(new DateTime(2001, 1, 1, 1, 1, 1, 110), MessageParser.ParseAt("010101", "010101.11"));
             Assert.Equal(new DateTime(2001, 1, 1, 1, 1, 1, 111), MessageParser.ParseAt("010101", "010101.111"));
+
+            // Broken cases
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseAt("000000", "000000"); });
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseAt("", ""); });
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseAt("321218", "010101.000"); });
+        }
+
+        [Fact]
+        public void ParseStatus()
+        {
+            // Standard cases
+            Assert.Equal(BeaconRecord.Statuses.Valid, MessageParser.ParseStatus("A"));
+            Assert.Equal(BeaconRecord.Statuses.Invalid, MessageParser.ParseStatus("V"));
+
+            // Edge cases
+            Assert.Equal(BeaconRecord.Statuses.Valid, MessageParser.ParseStatus("a"));
+
+            // Broken cases
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseStatus(" V"); });
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseStatus("V "); });
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseStatus("B"); });
+        }
+
+        [Fact]
+        public void ParseLatitudeIndicator()
+        {
+            // Standard cases
+            Assert.Equal(BeaconRecord.LatitudeIndicators.North, MessageParser.ParseLatitudeIndicator("N"));
+            Assert.Equal(BeaconRecord.LatitudeIndicators.South, MessageParser.ParseLatitudeIndicator("S"));
+
+            // Edge cases
+            Assert.Equal(BeaconRecord.LatitudeIndicators.North, MessageParser.ParseLatitudeIndicator("n"));
+
+            // Broken cases
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseLatitudeIndicator(" N"); });
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseLatitudeIndicator("N "); });
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseLatitudeIndicator("B"); });
+        }
+
+        [Fact]
+        public void ParseLongitudeIndicator()
+        {
+            // Standard cases
+            Assert.Equal(BeaconRecord.LongitudeIndicators.East, MessageParser.ParseLongitudeIndicator("E"));
+            Assert.Equal(BeaconRecord.LongitudeIndicators.West, MessageParser.ParseLongitudeIndicator("W"));
+
+            // Edge cases
+            Assert.Equal(BeaconRecord.LongitudeIndicators.East, MessageParser.ParseLongitudeIndicator("e"));
+
+            // Broken cases
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseLongitudeIndicator(" E"); });
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseLongitudeIndicator("E "); });
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseLongitudeIndicator("B"); });
+        }
+
+        [Fact]
+        public void ParseGenericString()
+        {
+            // Standard cases
+            Assert.Equal("Cake", MessageParser.ParseGenericString("Cake", "Field"));
+
+            // Edge cases
+            Assert.Equal(" ", MessageParser.ParseGenericString(" ", "Field"));
+
+            // Broken cases
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseGenericString("", "Field"); });
+        }
+
+        [Fact]
+        public void ParseGenericInteger()
+        {
+            // Standard cases
+            Assert.Equal(0, MessageParser.ParseGenericInteger("0", "Field"));
+            Assert.Equal(5, MessageParser.ParseGenericInteger("5", "Field"));
+            Assert.Equal(Int32.MaxValue, MessageParser.ParseGenericInteger(Int32.MaxValue.ToString(), "Field"));
+
+            // Edge cases
+
+            // Broken cases
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseGenericInteger("", "Field"); });
+        }
+
+        [Fact]
+        public void ParseGenericDouble()
+        {
+            // Standard cases
+            Assert.Equal(0, MessageParser.ParseGenericDouble("0", "Field"));
+            Assert.Equal(5.123, MessageParser.ParseGenericDouble("5.123", "Field"));
+            Assert.Equal(999999.999, MessageParser.ParseGenericDouble("999999.999", "Field")); // Interestingly the Double.Parse can't seem to handle Double.MaxValue! Not a problem for our usecase though
+
+            // Edge cases
+            Assert.Equal(0, MessageParser.ParseGenericDouble("", "Field")); // Weird case that I've been seeing from the GPS
+
+            // Broken cases
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseGenericInteger("cake", "Field"); });
+        }
+
+        [Fact]
+        public void ParseGenericNullableDouble()
+        {
+            // Standard cases
+            Assert.Equal(0, MessageParser.ParseGenericNullableDouble("0", "Field"));
+            Assert.Equal(5.123, MessageParser.ParseGenericNullableDouble("5.123", "Field"));
+            Assert.Equal(999999.999, MessageParser.ParseGenericNullableDouble("999999.999", "Field"));// Interestingly the Double.Parse can't seem to handle Double.MaxValue! Not a problem for our usecase though
+
+            // Edge cases
+            Assert.Null(MessageParser.ParseGenericNullableDouble("", "Field"));
+
+            // Broken cases
+            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseGenericNullableDouble("cake", "Field"); });
         }
 
         [Fact]
