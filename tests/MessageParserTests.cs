@@ -24,7 +24,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(Beacon.Statuses.PowerSaveStationary, beacon.Status);
 
             var record = beacon.Records.Single();
-            Assert.Equal("2018-12-12T09:38:08.0000000", record.At.ToString("o"));
+            Assert.Equal("2018-12-12T09:38:08.0000000Z", record.At.ToString("o"));
             Assert.Equal(BeaconRecord.Statuses.Valid, record.Status);
             Assert.Equal(2741.6724, record.Latitude);
             Assert.Equal(BeaconRecord.LatitudeIndicators.South, record.LatitudeIndicator);
@@ -44,7 +44,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(Beacon.Statuses.None, beacon.Status);
 
             var record = beacon.Records.Single();
-            Assert.Equal("2016-01-03T09:46:32.0000000", record.At.ToString("o"));
+            Assert.Equal("2016-01-03T09:46:32.0000000Z", record.At.ToString("o"));
             Assert.Equal(BeaconRecord.Statuses.Valid, record.Status);
             Assert.Equal(2237.7776, record.Latitude);
             Assert.Equal(BeaconRecord.LatitudeIndicators.North, record.LatitudeIndicator);
@@ -64,7 +64,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(Beacon.Statuses.None, beacon.Status);
 
             var record = beacon.Records.Single();
-            Assert.Equal("2020-12-30T13:46:32.0000000", record.At.ToString("o"));
+            Assert.Equal("2020-12-30T13:46:32.0000000Z", record.At.ToString("o"));
             Assert.Equal(BeaconRecord.Statuses.Invalid, record.Status);
             Assert.Equal(0, record.Latitude);
             Assert.Equal(BeaconRecord.LatitudeIndicators.North, record.LatitudeIndicator);

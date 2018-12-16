@@ -11,6 +11,7 @@ namespace InvertedTomato.IO.Mictrack
     {
         private const Char HEADER_TOKENSEPERATOR = '#';
         private const Char RECORD_TOKENSEPERATOR = ',';
+        private static readonly String[] AT_FORMATS = new String[] { "ddMMyy HHmmss", "ddMMyy HHmmss.f", "ddMMyy HHmmss.ff", "ddMMyy HHmmss.fff" };
 
         public static Beacon Parse(String message)
         {
@@ -141,11 +142,11 @@ namespace InvertedTomato.IO.Mictrack
 
 
             var input = $"{dateInput} {timeInput}";
-            if (!DateTime.TryParseExact(input, "ddMMyy HHmmss.ff", CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var output))
+            if (!DateTime.TryParseExact(input, AT_FORMATS, CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var output))
             {
                 throw new ProtocolViolationException($"Unable to parse At from '{input}'.");
             }
-            return output;
+            return DateTime.SpecifyKind(output, DateTimeKind.Utc); // TODO: Need to consider this one, without this the output is correct, but has been converted to local TZ
         }
 
         public static BeaconRecord.Statuses ParseStatus(String input)
