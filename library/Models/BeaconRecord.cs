@@ -2,6 +2,9 @@ using System;
 
 namespace InvertedTomato.IO.Mictrack.Models
 {
+    /// <summary>
+    /// Beacons can potentially contain multiple records providing a location and heading at a specific time.
+    /// </summary>
     public class BeaconRecord
     {
         /// <summary>

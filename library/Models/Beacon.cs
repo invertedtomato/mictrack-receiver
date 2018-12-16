@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace InvertedTomato.IO.Mictrack.Models
 {
+    /// <summary>
+    /// The beacon provided by a GPS Tracker.
+    /// </summary>
     public class Beacon
     {
         /// <summary>

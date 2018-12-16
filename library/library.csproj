@@ -11,7 +11,7 @@
     <PackageProjectUrl>https://github.com/invertedtomato/mictrack-receiver</PackageProjectUrl>
     <RepositoryUrl>https://github.com/invertedtomato/mictrack-receiver</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageVersion>1.0.3</PackageVersion>
+    <PackageVersion>1.1.0</PackageVersion>
     <Tags>mictrace receiver gps</Tags>
   </PropertyGroup>
   <ItemGroup>

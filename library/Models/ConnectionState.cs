@@ -8,9 +8,9 @@ namespace InvertedTomato.IO.Mictrack.Models
     {
         public Socket Connection { get; set; }
 
-        public Byte[] Buffer1 { get; set; }
+        public Byte[] BinaryBuffer { get; set; }
 
-        public String Buffer2 { get; set; } // Minimal advantage of using a StringBuilder here
+        public String StringBuffer { get; set; } // Considered StringBuilder, but it would probably result in poorer performance in this scenario (untested theory)
 
         public String RemoteAddressString { get; set; }
     }

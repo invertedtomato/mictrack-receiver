@@ -7,12 +7,32 @@ using InvertedTomato.IO.Mictrack.Models;
 
 namespace InvertedTomato.IO.Mictrack
 {
+    /// <summary>
+    /// Internal message parsing according to the Mictrack MP90 communication protocol (which appears to be based around the RMC protocol) in accordance with https://www.mictrack.com/downloads/protocols/Mictrack_Communication_Protocol_For_MP90&MP90-NB.pdf
+    /// </summary>
     public static class MessageParser
     {
+        /// <summary>
+        /// Character used to separate tokens (CSV style) on the header line.
+        /// </summary>
         private const Char HEADER_TOKENSEPERATOR = '#';
+
+        /// <summary>
+        /// Character used to separate tokens (CSV style) on the header line.
+        /// </summary>
         private const Char RECORD_TOKENSEPERATOR = ',';
+
+        /// <summary>
+        /// Format strings used to parse date/time strings on records.
+        /// </summary>
         private static readonly String[] AT_FORMATS = new String[] { "ddMMyy HHmmss", "ddMMyy HHmmss.f", "ddMMyy HHmmss.ff", "ddMMyy HHmmss.fff" };
 
+        /// <summary>
+        /// Parse a full message.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the message does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
         public static Beacon Parse(String message)
         {
             if (null == message)
@@ -104,6 +124,12 @@ namespace InvertedTomato.IO.Mictrack
             return beacon;
         }
 
+        /// <summary>
+        /// Parse the beacon status found in the header.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
         public static Beacon.Statuses ParseHeaderStatus(String input)
         {
             if (null == input)
@@ -129,6 +155,12 @@ namespace InvertedTomato.IO.Mictrack
             }
         }
 
+        /// <summary>
+        /// Parse a record date/time.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
         public static DateTime ParseAt(String dateInput, String timeInput)
         {
             if (null == dateInput)
@@ -149,6 +181,12 @@ namespace InvertedTomato.IO.Mictrack
             return DateTime.SpecifyKind(output, DateTimeKind.Utc); // TODO: Need to consider this one, without this the output is correct, but has been converted to local TZ
         }
 
+        /// <summary>
+        /// Parse a record status.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
         public static BeaconRecord.Statuses ParseStatus(String input)
         {
             if (null == input)
@@ -164,6 +202,12 @@ namespace InvertedTomato.IO.Mictrack
             }
         }
 
+        /// <summary>
+        /// Parse a latitude indicator.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
         public static BeaconRecord.LatitudeIndicators ParseLatitudeIndicator(String input)
         {
             if (null == input)
@@ -179,6 +223,12 @@ namespace InvertedTomato.IO.Mictrack
             }
         }
 
+        /// <summary>
+        /// Parse a longitude indicator.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
         public static BeaconRecord.LongitudeIndicators ParseLongitudeIndicator(String input)
         {
             if (null == input)
@@ -194,6 +244,12 @@ namespace InvertedTomato.IO.Mictrack
             }
         }
 
+        /// <summary>
+        /// Parse a string. I know this seems dumb, but it allows for consistency and it does handle empty strings as required.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
         public static String ParseGenericString(String input, String field)
         {
             if (null == input)
@@ -213,6 +269,12 @@ namespace InvertedTomato.IO.Mictrack
             return input;
         }
 
+        /// <summary>
+        /// Parse a integer.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
         public static Int32 ParseGenericInteger(String input, String field)
         {
             if (null == input)
@@ -231,6 +293,15 @@ namespace InvertedTomato.IO.Mictrack
             return output;
         }
 
+        /// <summary>
+        /// Parse a double.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
+        /// <remarks>
+        /// GPS Trackers implementing the protocol seem to provide nil values at empty strings. This seems strange, but it occurs at least on a nil ground speed on at MT600. This is mapped back to 0 in this parser.
+        /// </remarks>
         public static Double ParseGenericDouble(String input, String field)
         {
             if (null == input)
@@ -255,6 +326,15 @@ namespace InvertedTomato.IO.Mictrack
             return output;
         }
 
+        /// <summary>
+        /// Parse a nullable double.
+        /// </summary>
+        /// <exception cref="ProtocolViolationException">
+        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
+        /// </exception>
+        /// <remarks>
+        /// Empty strings are converted to nulls.
+        /// </remarks>
         public static Double? ParseGenericNullableDouble(String input, String field)
         {
             if (null == input)

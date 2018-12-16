@@ -6,6 +6,9 @@ using InvertedTomato.IO.Mictrack.Models;
 
 namespace InvertedTomato.IO.Mictrack
 {
+    /// <summary>
+    /// Receive beacons sent from physical GPS units, typically attached to vehicles. Beacons contain the units location and heading, along with other details.
+    /// </summary>
     public class MictrackReceiver : IDisposable
     {
         /// <summary>
@@ -41,8 +44,11 @@ namespace InvertedTomato.IO.Mictrack
         /// <summary>
         /// Size of first (byte array) receive buffer. Messages longer than this can be received, however will take multiple context switches.
         /// </summary>
-        private const Int32 RXBUFFER1_LENGTH = 256;
+        private const Int32 BINARYBUFFER_LENGTH = 256;
 
+        /// <summary>
+        /// Token that separate messages sent from GPSs.
+        /// </summary>
         private const String MESSAGE_SEPERATOR = "##\r\n";
 
         public delegate void OnBeaconEventHandler(Object sender, OnBeaconEventArgs e);
@@ -92,7 +98,10 @@ namespace InvertedTomato.IO.Mictrack
             {
                 Listener.BeginAccept(new AsyncCallback(AcceptEnd), null);
             }
-            catch (ObjectDisposedException) { } // Occurs during in-flight disposal - we need to catch it for a graceful shutdown
+            catch (ObjectDisposedException) // Occurs during in-flight disposal - we need to catch it for a graceful shutdown
+            {
+                return; // Abort accept - not needed since there's nothing after this code block - but there might be in a future refactor and it's consist with other areas!
+            }
         }
 
         private void AcceptEnd(IAsyncResult result)
@@ -111,8 +120,8 @@ namespace InvertedTomato.IO.Mictrack
             // Create state
             var state = new ConnectionState()
             {
-                Buffer1 = new byte[RXBUFFER1_LENGTH],
-                Buffer2 = string.Empty,
+                BinaryBuffer = new byte[BINARYBUFFER_LENGTH],
+                StringBuffer = string.Empty,
                 Connection = connection,
                 RemoteAddressString = ((IPEndPoint)connection.RemoteEndPoint).Address.ToString() // This is not available on the socket once it's error'd, so capture it now
             };
@@ -129,7 +138,7 @@ namespace InvertedTomato.IO.Mictrack
             // Begin receive
             try
             {
-                state.Connection.BeginReceive(state.Buffer1, 0, state.Buffer1.Length, SocketFlags.None, new AsyncCallback(ReceiveEnd), state);
+                state.Connection.BeginReceive(state.BinaryBuffer, 0, state.BinaryBuffer.Length, SocketFlags.None, new AsyncCallback(ReceiveEnd), state);
             }
             catch (ObjectDisposedException) // Occurs during in-flight disposal - we need to catch it for a graceful shutdown
             {
@@ -153,10 +162,10 @@ namespace InvertedTomato.IO.Mictrack
             var state = (ConnectionState)ar.AsyncState;
 
             // Complete read
-            Int32 len;
+            Int32 chunkLength;
             try
             {
-                len = state.Connection.EndReceive(ar);
+                chunkLength = state.Connection.EndReceive(ar);
             }
             catch (ObjectDisposedException) // Occurs during in-flight disposal - we need to catch it for a graceful shutdown
             {
@@ -170,27 +179,27 @@ namespace InvertedTomato.IO.Mictrack
                     Message = ex.Message,
                     RemoteAddressString = state.RemoteAddressString
                 });
-                return; // Abort receive - not needed since there's nothing after this code block - but there might be in a future refactor!
+                return; // Abort receive
             }
 
             // Decode chunk in first buffer
-            var chunk = Encoding.ASCII.GetString(state.Buffer1, 0, len);
+            var chunk = Encoding.ASCII.GetString(state.BinaryBuffer, 0, chunkLength);
 
             // Append to second buffer
-            state.Buffer2 += chunk;
+            state.StringBuffer += chunk; // This is the step that might be optimised with StringBuilder, but usually it occurs just once per message and the overheads probably negate it's advantage (untested theory)
 
-            // Cycle through each message in the buffer (0 or more)
-            var pos = state.Buffer2.IndexOf(MESSAGE_SEPERATOR); // TODO: this buffer management smells bad - it'll work, but I'm sure there's a more performant design
+            // Cycle through each message in the buffer (0 or more - but probably exactly 1)
+            var pos = state.StringBuffer.IndexOf(MESSAGE_SEPERATOR); // TODO: this buffer management smells bad - it'll work, but I'm sure there's a more performant design
             while (pos > 0)
             {
                 // Extract next message from buffer
-                var message = state.Buffer2.Substring(0, pos + MESSAGE_SEPERATOR.Length);
+                var message = state.StringBuffer.Substring(0, pos + MESSAGE_SEPERATOR.Length);
 
                 // Trim buffer
-                state.Buffer2 = state.Buffer2.Substring(pos + MESSAGE_SEPERATOR.Length);
+                state.StringBuffer = state.StringBuffer.Substring(pos + MESSAGE_SEPERATOR.Length);
 
                 // Find next message, if present
-                pos = state.Buffer2.IndexOf(MESSAGE_SEPERATOR);
+                pos = state.StringBuffer.IndexOf(MESSAGE_SEPERATOR);
 
                 // Process message
                 try
@@ -207,7 +216,7 @@ namespace InvertedTomato.IO.Mictrack
                 }
                 catch (ProtocolViolationException ex)
                 {
-                    // Report error
+                    // Raise error
                     OnError?.Invoke(this, new OnErrorEventArgs()
                     {
                         Message = ex.Message,
