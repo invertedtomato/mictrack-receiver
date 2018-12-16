@@ -39,6 +39,20 @@ namespace InvertedTomato.IO.Mictrace
         }
 
         [Fact]
+        public void ParseAt()
+        {
+            // Standard cases
+            Assert.Equal(new DateTime(2001, 1, 1, 1, 1, 1, 0), MessageParser.ParseAt("010101", "010101.000"));
+            Assert.Equal(new DateTime(2020, 12, 31, 23, 59, 59, 999), MessageParser.ParseAt("311220", "235959.999"));
+
+            // Edge cases
+            Assert.Equal(new DateTime(2001, 1, 1, 1, 1, 1, 0), MessageParser.ParseAt("010101", "010101"));
+            Assert.Equal(new DateTime(2001, 1, 1, 1, 1, 1, 100), MessageParser.ParseAt("010101", "010101.1"));
+            Assert.Equal(new DateTime(2001, 1, 1, 1, 1, 1, 110), MessageParser.ParseAt("010101", "010101.11"));
+            Assert.Equal(new DateTime(2001, 1, 1, 1, 1, 1, 111), MessageParser.ParseAt("010101", "010101.111"));
+        }
+
+        [Fact]
         public void EndToEnd_RealGPS()
         {
             var beacon = MessageParser.Parse("#861108034747229#MT600#0000#AUTOLOW#1\r\n#00018b5fc03$GPRMC,093808.00,A,2741.6724,S,15309.1364,E,0.05,,121218,,,A*52\r\n##\r\n");
