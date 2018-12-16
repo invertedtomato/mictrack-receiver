@@ -111,7 +111,7 @@ namespace InvertedTomato.IO.Mictrack
                 throw new ArgumentNullException(nameof(input));
             }
 
-            switch (input)
+            switch (input.ToUpperInvariant())
             {
                 case "AUTO": return Beacon.Statuses.None;
                 case "AUTOLOW": return Beacon.Statuses.PowerSaveStationary;
@@ -156,7 +156,7 @@ namespace InvertedTomato.IO.Mictrack
                 throw new ArgumentNullException(nameof(input));
             }
 
-            switch (input)
+            switch (input.ToUpperInvariant())
             {
                 case "A": return BeaconRecord.Statuses.Valid;
                 case "V": return BeaconRecord.Statuses.Invalid;
@@ -171,7 +171,7 @@ namespace InvertedTomato.IO.Mictrack
                 throw new ArgumentNullException(nameof(input));
             }
 
-            switch (input)
+            switch (input.ToUpperInvariant())
             {
                 case "N": return BeaconRecord.LatitudeIndicators.North;
                 case "S": return BeaconRecord.LatitudeIndicators.South;
@@ -186,7 +186,7 @@ namespace InvertedTomato.IO.Mictrack
                 throw new ArgumentNullException(nameof(input));
             }
 
-            switch (input)
+            switch (input.ToUpperInvariant())
             {
                 case "E": return BeaconRecord.LongitudeIndicators.East;
                 case "W": return BeaconRecord.LongitudeIndicators.West;
