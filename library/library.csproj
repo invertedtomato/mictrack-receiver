@@ -4,14 +4,14 @@
     <PackageId>InvertedTomato.MictraceReceiver</PackageId>
     <Title>Mictrace Receiver</Title>
     <Authors>Inverted Tomato</Authors>
-    <Description>A beacon receiver for Mictrace GPS trackers.</Description>
-    <PackageDescription>A beacon receiver for Mictrace GPS trackers.</PackageDescription>
-    <Summary>A beacon receiver for Mictrace GPS trackers.</Summary>
+    <Description>Receive location beacons from Mictrace GPS trackers and use the data for anything.</Description>
+    <PackageDescription>Receive location beacons from Mictrace GPS trackers and use the data for anything.</PackageDescription>
     <PackageLicenseUrl>https://github.com/invertedtomato/mictrack-receiver/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/invertedtomato/mictrack-receiver</PackageProjectUrl>
     <RepositoryUrl>https://github.com/invertedtomato/mictrack-receiver</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageVersion>1.1.0</PackageVersion>
+    <PackageVersion>1.1.2</PackageVersion>
+    <PackageReleaseNotes>Corrected default port.</PackageReleaseNotes>
     <Tags>mictrace receiver gps</Tags>
   </PropertyGroup>
   <ItemGroup>
