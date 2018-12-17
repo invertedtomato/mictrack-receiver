@@ -10,7 +10,7 @@
     <PackageProjectUrl>https://github.com/invertedtomato/mictrack-receiver</PackageProjectUrl>
     <RepositoryUrl>https://github.com/invertedtomato/mictrack-receiver</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageVersion>1.1.2</PackageVersion>
+    <PackageVersion>1.2.0</PackageVersion>
     <PackageReleaseNotes>Corrected default port.</PackageReleaseNotes>
     <Tags>mictrace receiver gps</Tags>
   </PropertyGroup>
