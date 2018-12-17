@@ -117,7 +117,7 @@ namespace InvertedTomato.IO.Mictrack
                     Longitude = ParseGenericDouble(tokens[5], "Longitude"),
                     LongitudeIndicator = ParseLongitudeIndicator(tokens[6]),
                     GroundSpeed = ParseGenericDouble(tokens[7], "GroundSpeed"),
-                    Bearing = ParseGenericNullableDouble(tokens[8], "Bearing")
+                    Bearing = ParseGenericDouble(tokens[8], "Bearing")
                 });
             }
 
@@ -317,38 +317,6 @@ namespace InvertedTomato.IO.Mictrack
             if (input == String.Empty)
             {
                 return 0;
-            }
-
-            if (!Double.TryParse(input, out var output))
-            {
-                throw new ProtocolViolationException($"Unable to parse {field} from '{input}'.");
-            }
-            return output;
-        }
-
-        /// <summary>
-        /// Parse a nullable double.
-        /// </summary>
-        /// <exception cref="ProtocolViolationException">
-        /// Raised when the field does not comply with the protocol standard and cannot be parsed.
-        /// </exception>
-        /// <remarks>
-        /// Empty strings are converted to nulls.
-        /// </remarks>
-        public static Double? ParseGenericNullableDouble(String input, String field)
-        {
-            if (null == input)
-            {
-                throw new ArgumentNullException(nameof(input));
-            }
-            if (null == field)
-            {
-                throw new ArgumentNullException(nameof(field));
-            }
-
-            if (input == String.Empty)
-            {
-                return null;
             }
 
             if (!Double.TryParse(input, out var output))

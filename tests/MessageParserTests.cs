@@ -148,21 +148,6 @@ namespace InvertedTomato.IO.Mictrace
         }
 
         [Fact]
-        public void ParseGenericNullableDouble()
-        {
-            // Standard cases
-            Assert.Equal(0, MessageParser.ParseGenericNullableDouble("0", "Field"));
-            Assert.Equal(5.123, MessageParser.ParseGenericNullableDouble("5.123", "Field"));
-            Assert.Equal(999999.999, MessageParser.ParseGenericNullableDouble("999999.999", "Field"));// Interestingly the Double.Parse can't seem to handle Double.MaxValue! Not a problem for our usecase though
-
-            // Edge cases
-            Assert.Null(MessageParser.ParseGenericNullableDouble("", "Field"));
-
-            // Broken cases
-            Assert.Throws<ProtocolViolationException>(() => { MessageParser.ParseGenericNullableDouble("cake", "Field"); });
-        }
-
-        [Fact]
         public void EndToEnd_RealGPS()
         {
             var beacon = MessageParser.Parse("#861108034747229#MT600#0000#AUTOLOW#1\r\n#00018b5fc03$GPRMC,093808.00,A,2741.6724,S,15309.1364,E,0.05,,121218,,,A*52\r\n##\r\n");
@@ -179,7 +164,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(15309.1364, record.Longitude);
             Assert.Equal(BeaconRecord.LongitudeIndicators.East, record.LongitudeIndicator);
             Assert.Equal(0.05, record.GroundSpeed);
-            Assert.Null(record.Bearing);
+            Assert.Equal(0, record.Bearing);
         }
 
         [Fact]
@@ -219,7 +204,7 @@ namespace InvertedTomato.IO.Mictrace
             Assert.Equal(0, record.Longitude);
             Assert.Equal(BeaconRecord.LongitudeIndicators.West, record.LongitudeIndicator);
             Assert.Equal(0, record.GroundSpeed);
-            Assert.Null(record.Bearing);
+            Assert.Equal(0, record.Bearing);
         }
     }
 }

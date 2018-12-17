@@ -31,7 +31,7 @@ namespace InvertedTomato.IO.Mictrack
                     }
 
                     // Heading
-                    if (record.Bearing.HasValue)
+                    if (record.GroundSpeed>=1)
                     {
                         Console.WriteLine($"    Heading:  {record.Bearing} deg @ {record.GroundSpeed} knots");
                     }

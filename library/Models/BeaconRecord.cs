@@ -54,7 +54,10 @@ namespace InvertedTomato.IO.Mictrack.Models
         /// <summary>
         /// Bearing, in degreese.
         /// </summary>
-        public Double? Bearing { get; set; } // Degrees
+        /// <remarks>
+        /// When ground-speed is around 0 this becomes somewhat random.
+        /// </remarks>
+        public Double Bearing { get; set; }
 
         public enum Statuses : Byte
         {
